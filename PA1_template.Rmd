@@ -3,17 +3,18 @@ Title
 
 
 ```{r, echo = FALSE}
-data = read.csv("activity.csv")
+data = read.csv("C:/Users/KPainter/Desktop/coursera_misc/activity.csv")
+data$date = as.Date(data$date)
 data_no_na = data[complete.cases(data),]
-
 
 ```
 
 What is mean total number of steps taken per day?
 
 ```{r}
-daysums = aggregate(data$steps, list (date = data$date), sum)
-daysums$date = as.Date(daysums$date)
+#data_no_na = complete.cases(data)
+daysums = aggregate(data_no_na$steps, list (date = data_no_na$date), sum)
+#daysums$date = as.Date(daysums$date)
 plot(daysums, type = 'l')
 mean(daysums$x, na.rm=TRUE)
 median(daysums$x, na.rm = TRUE)
@@ -22,7 +23,9 @@ median(daysums$x, na.rm = TRUE)
 What is the average daily activity pattern?
 
 ```{r}
-interval_steps = aggregate(data_no_na$steps, list(interval = data_no_na$interval), mean)
+interval_steps_mean = aggregate(data_no_na$steps, list(interval = data_no_na$interval), mean)
+interval_steps_median = aggregate(data_no_na$steps, list(interval = data_no_na$interval), median)
+interval_steps = interval_steps_mean
 plot(interval_steps, type = 'l', ylab= "average steps")
 interval_steps$interval[interval_steps$x == max(interval_steps$x)]
 ```
@@ -30,14 +33,28 @@ interval_steps$interval[interval_steps$x == max(interval_steps$x)]
 Imputing missing values
 
 ```{r}
-length(data$steps[is.na(data$steps)])
-NA = interval_steps$x for the correct interval
+#num_missing = dim(data[is.na(data$steps),])[1]
+      
+#replace NA values with the average for that time interval from the rest of the dataset
+newdata = data.frame(steps = replace(data$steps, is.na(data$steps), interval_steps$x), date = data$date, interval = data$interval)
+newdaysums = aggregate(newdata$steps, list (date = newdata$date), sum)
+
+barplot(newdaysums$x, xlab="day", ylab = "steps", col="red", 
+        main="Steps per day", axisnames=TRUE)
+mean(newdaysums$x)
+median(newdaysums$x)
 
 ```
 
 Are there differences in activity patterns between weekdays and weekends?
 
 ```{r}
+newdata$weekday = weekdays(newdata$date)
+#wkd = factor(rep('weekday', 17568))
+#wkd[newdata$weekday == "Sunday"] = 'weekend'
+newdata$dayclass <- ifelse(newdata$weekday == "Sunday" | newdata$weekday == "Saturday", c("weekend"), c("weekday"))
+#weekday_mean = aggregate(newdata$steps[newdata$dayclass == "weekday",], list(interval = newdata$interval[newdata$dayclass == "weekday",]), mean)
+
 
 
 ```
